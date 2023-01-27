@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Calculator</title>
+    <style>
+        .row {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            height:50px;
+            width: 100%;
+        }
+        .cel {
+            flex-grow: 1    ;
+        }
+        .center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .border{
+            border:solid;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="cel border center">A argument</div>
+        <div class="cel border center">Operator Dropdown</div>
+        <div class="cel border center">B argument</div>
+        <div class="cel border center">=</div>
+        <div class="cel border center">Result</div>
+        <div class="cel border center">Calculate</div>
+    </div>
+    <div class="row">
+        <div class="cel border center"><input id="paramA" type="number" /></div>
+        <div class="cel border center">
+            <select id="operators"></select>
+        </div>
+        <div class="cel border center"><input id="paramB" type="number" /></div>
+        <div class="cel border center">=</div>
+        <div class="cel border center"><input id="result" type="number" disabled /></div>
+        <div class="cel border center"><button id="calculate">Calculate</button></div>
+    </div>
+    <div id="errorMessages"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/Operators').then(r => r.json().then(res => {
+                document.getElementById('operators').innerHTML = res.map(o => `<option value="${o.operator}">${o.operator}</option>`);
+            }));
+        });
+        document.getElementById('calculate').addEventListener('click', () => {
+            const bodyToSend = JSON.stringify([
+                {
+                    parameter: document.getElementById('paramA').value,
+                    operator: document.getElementById('operators').value
+                },
+                {
+                    parameter: document.getElementById('paramB').value,
+                    operator: '='
+                }
+            ]);
+            console.log(bodyToSend);
+            fetch('/api/Operations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: bodyToSend
+            }).then(r => r.json().then(res => {
+                document.getElementById('result').value = res.result ?? 0;
+                if (!r.ok && r.status===400) {
+                    document.getElementById('errorMessages').innerHTML = res.map(o => `<p">${o}</p>`);
+                }
+                else {
+                    document.getElementById('errorMessages').innerHTML = '';
+                }
+
+            }));
+        });
+    </script>
+</body>
+</html>
